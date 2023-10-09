@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from density import get_density
-from helpers import move_to_point
+from helpers import move_to_point, get_resolution
 
 def parse_args():
     parser = argparse.ArgumentParser()
@@ -26,8 +26,9 @@ def main(config):
 
     # setup numpy vectorization
     get_density_vectorized = np.vectorize(get_density)
+    get_resolution_vectorized = np.vectorize(get_resolution)
     density = get_density_vectorized(x, y)
-    
+    density = get_resolution_vectorized(density)
     # Transform center points
     center_latitude = float(config['GEO']['center_latitude'])
     center_longitude = float(config['GEO']['center_longitude'])
@@ -36,7 +37,7 @@ def main(config):
     # create plot with plate carree projection
     fig = plt.figure()
     ax = fig.add_subplot(1, 1, 1, projection=ccrs.PlateCarree())
-    ax.contour(x, y, density)
+    ax.contour(x, y, density, config.getlist('CONFIG', 'levels'))
     
     # Set globe, stock image, grid lines, and coastlines
     ax.set_global()
@@ -48,6 +49,6 @@ def main(config):
 
 if __name__ == '__main__':
     args = parse_args()
-    config = configparser.ConfigParser()
+    config = configparser.ConfigParser(converters={'list': lambda x: [i.strip() for i in x.split(',')]})
     config.read(args.configFilepath)
     main(config)
