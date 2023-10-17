@@ -6,7 +6,7 @@ import numpy as np
 # – 3368.
 def get_density(x, y):
     minimum_density = (1.0/15.0)**4
-    half_width_high_resolution = 0.0350
+    half_width_high_resolution = 0.3
     transition_zone_width = 0.10944
     coefficient = (1 - minimum_density) / 2
     to_calculate = (half_width_high_resolution - np.sqrt((x * x) + (y * y))) / transition_zone_width
