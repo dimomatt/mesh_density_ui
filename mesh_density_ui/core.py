@@ -3,7 +3,8 @@ import configparser
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
-from point import Point, cross_product
+from point import Point, cross_product, rotate_with_matrix
+from quaternion import Quaternion, q_mult, q_point_mult, quaternion_to_axisangle, axis_angle_to_quat
 from density import get_density
 from helpers import move_to_point, get_resolution
 
@@ -45,30 +46,12 @@ def main(config):
     density = get_density_vectorized(lats, lons)
     density = get_resolution_vectorized(density)
 
-    # Transform center points
+    # Get the rotation angles
     d_lat =  new_lat_rad - initial_lat_rad
     d_lon =  new_lon_rad - initial_lon_rad
     d_birdseye = birdseye_rotation_rad
     
-    z_axis_unit_vector = Point()
-    z_axis_unit_vector.set_from_cart(0.0, 0.0, 1.0)
-
-    original_long_point = Point()
-    original_long_point.set_from_lat_lon(0.0, initial_lon_rad)
-    original_long_point.normalize()
-
-    cross_prod_vector = cross_product(z_axis_unit_vector, original_long_point, normalize=True)
-
-    # latitude rotation
-    for point in points:
-        point.rotate_about_point(d_lon, z_axis_unit_vector)
-
-        # Latitude rotation
-        point.rotate_about_point(d_lat, cross_prod_vector)
-
-        # Birdseye rotation
-        point.rotate_about_point(d_birdseye, point)
-
+    points = [rotate_with_matrix(x, -d_lat, d_lon) for x in points]
     lats = [point.lat for point in points]
     lons = [point.lon for point in points]
 
@@ -86,7 +69,6 @@ def main(config):
     ax.stock_img()
     ax.coastlines()
     ax.gridlines()
-
     plt.show()
 
 if __name__ == '__main__':
